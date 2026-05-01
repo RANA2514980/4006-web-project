@@ -12,6 +12,15 @@ const CARBON_EMISSIONS = {
   dlr: 24,
 };
 
+const JOURNEY_MODE_PRIORITY = [
+  'tube',
+  'dlr',
+  'overground',
+  'tram',
+  'rail',
+  'bus',
+];
+
 
 /**
  * Search for stops by query string in real-time
@@ -116,26 +125,29 @@ export async function fetchJourney(fromId, toId) {
       throw new Error('One or both stops could not be validated. Try searching again.');
     }
 
-    console.log('Stop details found:', { 
-      fromStop: { name: fromStop.name, id: fromStop.id, modes: fromStop.modes },
-      toStop: { name: toStop.name, id: toStop.id, modes: toStop.modes }
+    const resolvedFromStop = resolveStopForJourney(fromStop);
+    const resolvedToStop = resolveStopForJourney(toStop);
+
+    console.log('Stop details found:', {
+      fromStop: { name: resolvedFromStop.name, id: resolvedFromStop.id, modes: resolvedFromStop.modes },
+      toStop: { name: resolvedToStop.name, id: resolvedToStop.id, modes: resolvedToStop.modes }
     });
 
     // Check if stops support journey planning (typically require specific modes)
-    const supportedModes = ['tube', 'dlr', 'tram', 'overground', 'rail', 'bus'];
-    const fromHasJourneySupport = fromStop.modes && fromStop.modes.some(m => supportedModes.includes(m));
-    const toHasJourneySupport = toStop.modes && toStop.modes.some(m => supportedModes.includes(m));
+    const supportedModes = JOURNEY_MODE_PRIORITY;
+    const fromHasJourneySupport = resolvedFromStop.modes && resolvedFromStop.modes.some(m => supportedModes.includes(m));
+    const toHasJourneySupport = resolvedToStop.modes && resolvedToStop.modes.some(m => supportedModes.includes(m));
 
     if (!fromHasJourneySupport || !toHasJourneySupport) {
       console.warn('Stops may not support journey planning:', {
-        fromModes: fromStop.modes,
-        toModes: toStop.modes
+        fromModes: resolvedFromStop.modes,
+        toModes: resolvedToStop.modes
       });
     }
 
     // Try with primary ID
-    let validatedFromId = fromStop.id;
-    let validatedToId = toStop.id;
+    let validatedFromId = resolvedFromStop.id;
+    let validatedToId = resolvedToStop.id;
 
     console.log('Using stop IDs:', { validatedFromId, validatedToId });
 
@@ -163,8 +175,8 @@ export async function fetchJourney(fromId, toId) {
       
       console.error('Journey API Error:', {
         status: response.status,
-        fromStop: { name: fromStop.name, modes: fromStop.modes },
-        toStop: { name: toStop.name, modes: toStop.modes },
+        fromStop: { name: resolvedFromStop.name, modes: resolvedFromStop.modes },
+        toStop: { name: resolvedToStop.name, modes: resolvedToStop.modes },
         validatedFromId,
         validatedToId,
         errorData
@@ -509,11 +521,43 @@ export async function fetchStopDetails(stopId) {
       lon: data.lon,
       modes: data.modes,
       place: data.place,
+      stopType: data.stopType,
+      children: (data.children || []).map(child => ({
+        id: child.id,
+        name: child.name,
+        modes: child.modes || [],
+        stopType: child.stopType,
+      })),
     };
   } catch (error) {
     console.error('Error fetching stop details:', error);
     throw error;
   }
+}
+
+function resolveStopForJourney(stop) {
+  if (!stop) return stop;
+
+  const isHub = String(stop.id || '').toUpperCase().startsWith('HUB');
+  const isInterchange = stop.stopType === 'TransportInterchange';
+  if (!isHub && !isInterchange) return stop;
+
+  const children = Array.isArray(stop.children) ? stop.children : [];
+  if (children.length === 0) return stop;
+
+  const supportedChildren = children.filter(child =>
+    child.modes?.some(mode => JOURNEY_MODE_PRIORITY.includes(mode))
+  );
+  if (supportedChildren.length === 0) return stop;
+
+  const pickScore = (child) => {
+    const firstMode = child.modes?.find(mode => JOURNEY_MODE_PRIORITY.includes(mode));
+    const modeIndex = firstMode ? JOURNEY_MODE_PRIORITY.indexOf(firstMode) : JOURNEY_MODE_PRIORITY.length;
+    return modeIndex;
+  };
+
+  const bestChild = [...supportedChildren].sort((a, b) => pickScore(a) - pickScore(b))[0];
+  return bestChild || stop;
 }
 
 export default {
