@@ -1,17 +1,8 @@
-/**
- * Travel Store - Central store for managing travel-related data
- * Handles state management for stops, journeys, and journey requests
- */
-
 import { createContext, useContext, useState, useCallback } from 'react';
 import * as tflApi from '../services/tflApi';
 
-// Create context
 const TravelContext = createContext();
 
-/**
- * TravelProvider component - wraps app with travel context
- */
 export function TravelProvider({ children }) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
@@ -23,9 +14,6 @@ export function TravelProvider({ children }) {
   const [selectedFrom, setSelectedFrom] = useState(null);
   const [selectedTo, setSelectedTo] = useState(null);
 
-  /**
-   * Search stops in real-time using TFL API
-   */
   const searchStops = useCallback(async (query) => {
     if (!query || query.trim().length === 0) {
       return [];
@@ -43,9 +31,6 @@ export function TravelProvider({ children }) {
     }
   }, []);
 
-  /**
-   * Fetch journey between two stops
-   */
   const getJourney = useCallback(async (fromStopId, toStopId) => {
     if (!fromStopId || !toStopId) {
       setJourneyError('From and To stops are required');
@@ -58,15 +43,12 @@ export function TravelProvider({ children }) {
     try {
       const data = await tflApi.fetchJourney(fromStopId, toStopId);
       
-      // Handle both array (normal case) and {journeys, error} (fallback case)
       if (data.journeys) {
-        // Fallback case: had error but got synthetic routes
         setJourneys(data.journeys);
         if (data.error) {
           setJourneyError(`Note: ${data.error}\n✓ Showing sustainable alternatives (cycle & walk)`);
         }
       } else {
-        // Normal case: regular journey results
         setJourneys(data);
       }
       
@@ -80,9 +62,6 @@ export function TravelProvider({ children }) {
     }
   }, []);
 
-  /**
-   * Clear current journey
-   */
   const clearJourney = useCallback(() => {
     setJourneys([]);
     setSelectedFrom(null);
@@ -90,9 +69,6 @@ export function TravelProvider({ children }) {
     setJourneyError(null);
   }, []);
 
-  /**
-   * Get departures for a specific stop
-   */
   const getDepartures = useCallback(async (stopId) => {
     try {
       return await tflApi.fetchDepartures(stopId);
@@ -102,9 +78,6 @@ export function TravelProvider({ children }) {
     }
   }, []);
 
-  /**
-   * Get stop details
-   */
   const getStopDetails = useCallback(async (stopId) => {
     try {
       return await tflApi.fetchStopDetails(stopId);
@@ -115,12 +88,10 @@ export function TravelProvider({ children }) {
   }, []);
 
   const value = {
-    // Search actions
     searchStops,
     searchLoading,
     searchError,
 
-    // Journey data and actions
     journeys,
     journeyLoading,
     journeyError,
@@ -129,7 +100,6 @@ export function TravelProvider({ children }) {
     selectedFrom,
     selectedTo,
 
-    // Other actions
     getDepartures,
     getStopDetails,
   };
@@ -141,9 +111,6 @@ export function TravelProvider({ children }) {
   );
 }
 
-/**
- * Custom hook to use travel context
- */
 export function useTravel() {
   const context = useContext(TravelContext);
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Collapse } from 'bootstrap';
+import { FiMapPin } from 'react-icons/fi';
 
 function Navbar() {
   const closeNavbar = () => {
@@ -12,8 +13,9 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
       <div className="container-fluid">
-        <Link to="/" className="navbar-brand fw-bold">
-          ST Marry
+        <Link to="/" className="navbar-brand fw-bold d-flex align-items-center gap-2">
+          <FiMapPin className="text-success" />
+          St Mary's Urban Mobility Hub
         </Link>
         <button
           className="navbar-toggler"

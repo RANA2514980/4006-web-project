@@ -22,10 +22,6 @@ const JOURNEY_MODE_PRIORITY = [
 ];
 
 
-/**
- * Search for stops by query string in real-time
- * Uses TFL API search endpoint for immediate suggestions
- */
 export async function searchStopsForQuery(query) {
   if (!query || query.trim().length === 0) {
     return [];
@@ -47,7 +43,7 @@ export async function searchStopsForQuery(query) {
         lon: stop.lon,
         modes: stop.modes || [],
         commonName: stop.commonName,
-        stopCode: stop.stopLetter || stop.naptanCode, // Backup identifiers
+        stopCode: stop.stopLetter || stop.naptanCode,
       }));
     }
 
@@ -103,12 +99,10 @@ export async function fetchJourney(fromId, toId) {
   try {
     console.log('Fetching journey from', fromId, 'to', toId);
     
-    // Validate that we have proper stop IDs
     if (!fromId || !toId || String(fromId).trim() === String(toId).trim()) {
       throw new Error('Invalid stops: From and To must be different valid stops');
     }
 
-    // Get full stop details to ensure we have correct IDs
     console.log('Validating stops...');
     const [fromStop, toStop] = await Promise.all([
       fetchStopDetails(fromId).catch(e => {
@@ -133,7 +127,6 @@ export async function fetchJourney(fromId, toId) {
       toStop: { name: resolvedToStop.name, id: resolvedToStop.id, modes: resolvedToStop.modes }
     });
 
-    // Check if stops support journey planning (typically require specific modes)
     const supportedModes = JOURNEY_MODE_PRIORITY;
     const fromHasJourneySupport = resolvedFromStop.modes && resolvedFromStop.modes.some(m => supportedModes.includes(m));
     const toHasJourneySupport = resolvedToStop.modes && resolvedToStop.modes.some(m => supportedModes.includes(m));
@@ -145,19 +138,16 @@ export async function fetchJourney(fromId, toId) {
       });
     }
 
-    // Try with primary ID
     let validatedFromId = resolvedFromStop.id;
     let validatedToId = resolvedToStop.id;
 
     console.log('Using stop IDs:', { validatedFromId, validatedToId });
 
-    // Ensure IDs are strings and properly encoded
     const encodedFromId = encodeURIComponent(String(validatedFromId).trim());
     const encodedToId = encodeURIComponent(String(validatedToId).trim());
 
     console.log('Encoded IDs:', { encodedFromId, encodedToId });
 
-    // Build journey URL
     const journeyUrl = `${TFL_API_BASE}/Journey/JourneyResults/${encodedFromId}/to/${encodedToId}?alternatives=true&accessibilityPreference=noRequirements&walkingSpeed=average&cycleSpeed=average`;
     console.log('Journey URL:', journeyUrl);
 
@@ -170,7 +160,6 @@ export async function fetchJourney(fromId, toId) {
       try {
         errorData = await response.json();
       } catch {
-        // Response is not JSON
       }
       
       console.error('Journey API Error:', {
@@ -182,7 +171,6 @@ export async function fetchJourney(fromId, toId) {
         errorData
       });
 
-      // Handle specific error codes
       if (response.status === 300 || response.status === 400) {
         const hint = `✓ Good news: Cycle & walk routes are always available!\n\n` +
           `🚏 For public transit, try major stations with good connections:\n` +
@@ -209,10 +197,8 @@ export async function fetchJourney(fromId, toId) {
       });
     } else {
       console.warn('No journeys found in API response (this is OK - synthetic routes will show)');
-      // Return empty array so synthetic routes still appear
     }
 
-    // Add synthetic cycle and walk routes
     const cycleAndWalkRoutes = await getSyntheticCycleAndWalkRoutes(validatedFromId, validatedToId);
     journeys.push(...cycleAndWalkRoutes);
 
@@ -220,14 +206,12 @@ export async function fetchJourney(fromId, toId) {
   } catch (error) {
     console.error('Error fetching journey:', error.message);
     
-    // Always try to return synthetic routes (cycle & walk) even if transit planning fails
     try {
       console.log('Falling back to synthetic routes (cycle & walk)...');
       const cycleAndWalkRoutes = await getSyntheticCycleAndWalkRoutes(fromId, toId);
       
       if (cycleAndWalkRoutes && cycleAndWalkRoutes.length > 0) {
         console.log('Returning synthetic routes as fallback');
-        // Return synthetic routes but also pass the error message for display
         return {
           journeys: cycleAndWalkRoutes,
           error: error.message
@@ -237,15 +221,10 @@ export async function fetchJourney(fromId, toId) {
       console.error('Failed to generate synthetic routes:', syntheticError);
     }
     
-    // If everything fails, throw the original error
     throw error;
   }
 }
 
-/**
- * Process individual journey data from TFL API
- * Extract modes, times, distances, and calculate costs and emissions
- */
 function processJourneyData(journey) {
   const legs = journey.legs || [];
   const modes = new Set();
@@ -255,26 +234,21 @@ function processJourneyData(journey) {
   let totalCarbon = 0;
 
   legs.forEach(leg => {
-    // Extract mode
     if (leg.mode && leg.mode.id) {
       modes.add(leg.mode.id);
     }
 
-    // Calculate time (convert from TFL format if needed)
     if (leg.duration) {
       totalTime += leg.duration;
     }
 
-    // Calculate distance
     if (leg.distance) {
-      totalDistance += leg.distance / 1000; // Convert to km
+      totalDistance += leg.distance / 1000;
     }
 
-    // Calculate cost (simplified - TFL might provide actual fare)
     const legCost = calculateLegCost(leg);
     totalCost += legCost;
 
-    // Calculate carbon emissions
     const mode = leg.mode?.id || 'bus';
     const legDistance = (leg.distance || 0) / 1000;
     const carbonFactor = CARBON_EMISSIONS[mode] || 50;
@@ -289,27 +263,22 @@ function processJourneyData(journey) {
       departureTime: leg.departureTime,
       arrivalTime: leg.arrivalTime,
       duration: leg.duration,
-      distance: (leg.distance || 0) / 1000, // km
+      distance: (leg.distance || 0) / 1000,
       route: leg.route?.name || leg.description || 'N/A',
       instruction: leg.instruction?.summary || '',
     })),
-    totalTime, // minutes
-    totalDistance, // km
-    totalCost, // GBP (simplified)
-    carbonEmission: Math.round(totalCarbon), // grams CO2
+    totalTime,
+    totalDistance,
+    totalCost,
+    carbonEmission: Math.round(totalCarbon),
     departureTime: legs[0]?.departureTime || new Date(),
     arrivalTime: legs[legs.length - 1]?.arrivalTime || new Date(),
   };
 }
 
-/**
- * Calculate estimated cost for a leg (simplified)
- * TFL has complex fare structure - this is a rough estimate
- */
 function calculateLegCost(leg) {
   const mode = leg.mode?.id || 'bus';
 
-  // Very simplified fare estimates (GBP)
   const fareLookup = {
     bus: 1.75,
     tube: 1.75,
@@ -322,23 +291,17 @@ function calculateLegCost(leg) {
   };
 
   const basefare = fareLookup[mode] || 2.0;
-  const distance = (leg.distance || 0) / 1000; // km
+  const distance = (leg.distance || 0) / 1000;
 
-  // Simple cost based on distance
   if (mode === 'bus' || mode === 'tram' || mode === 'dlr') {
     return basefare;
   }
 
-  // For longer distances, add distance-based cost
   return basefare + (distance * 0.5);
 }
 
-/**
- * Calculate distance between two coordinates using Haversine formula
- * Returns distance in kilometers
- */
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -351,18 +314,12 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-/**
- * Create synthetic routes for cycle and walk options
- * Calculates realistic times based on distance and typical speeds in London
- */
 async function getSyntheticCycleAndWalkRoutes(fromId, toId) {
   try {
-    // Fetch stop details to get coordinates
     const fromStop = await fetchStopDetails(fromId);
     const toStop = await fetchStopDetails(toId);
 
     if (!fromStop || !toStop) {
-      // Fallback to placeholder values if API fails
       return getPlaceholderRoutes();
     }
 
@@ -376,7 +333,6 @@ async function getSyntheticCycleAndWalkRoutes(fromId, toId) {
     const routes = [];
     const now = new Date();
 
-    // Walk route - average 5 km/h in urban area
     const walkTimeMinutes = Math.ceil((distance / 5) * 60);
     routes.push({
       id: `walk-${fromId}-${toId}`,
@@ -400,7 +356,6 @@ async function getSyntheticCycleAndWalkRoutes(fromId, toId) {
       arrivalTime: new Date(now.getTime() + walkTimeMinutes * 60 * 1000),
     });
 
-    // Cycle route - average 20 km/h in urban area
     const cycleTimeMinutes = Math.ceil((distance / 20) * 60);
     routes.push({
       id: `cycle-${fromId}-${toId}`,
@@ -431,9 +386,6 @@ async function getSyntheticCycleAndWalkRoutes(fromId, toId) {
   }
 }
 
-/**
- * Placeholder routes for when distance calculation fails
- */
 function getPlaceholderRoutes() {
   const now = new Date();
   return [
@@ -482,9 +434,6 @@ function getPlaceholderRoutes() {
   ];
 }
 
-/**
- * Get real-time departures for a specific stop
- */
 export async function fetchDepartures(stopId) {
   try {
     const response = await fetch(
@@ -505,9 +454,6 @@ export async function fetchDepartures(stopId) {
   }
 }
 
-/**
- * Get stop details by ID
- */
 export async function fetchStopDetails(stopId) {
   try {
     const response = await fetch(`${TFL_API_BASE}/StopPoint/${stopId}`);

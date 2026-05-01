@@ -2,22 +2,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@600;700&display=swap');
 
 :root {
-  /* Primary Teal */
   --primary: #00685f;
   --on-primary: #ffffff;
   --primary-container: #008378;
   
-  /* Secondary Blue */
   --secondary: #576065;
   --on-secondary: #ffffff;
   --secondary-container: #dbe4ea;
   
-  /* Tertiary Navy */
   --tertiary: #545c72;
   --on-tertiary: #ffffff;
   --tertiary-container: #dae2fd;
   
-  /* Surface Colors */
   --surface: #f8f9ff;
   --surface-container-low: #eff4ff;
   --surface-container: #e5eeff;
@@ -25,18 +21,15 @@
   --on-surface: #0b1c30;
   --on-surface-variant: #3d4947;
   
-  /* Neutral */
   --outline: #6d7a77;
   --outline-variant: #bcc9c6;
   
-  /* Spacing (8px base) */
   --spacing-xs: 4px;
   --spacing-sm: 12px;
   --spacing-md: 24px;
   --spacing-lg: 48px;
   --spacing-xl: 80px;
   
-  /* Border Radius */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
@@ -63,7 +56,6 @@ body {
   line-height: 1.5;
 }
 
-/* Typography */
 h1 {
   font-family: 'Manrope', sans-serif;
   font-size: 48px;
@@ -99,7 +91,6 @@ label {
   letter-spacing: 0.01em;
 }
 
-/* Override Bootstrap Colors */
 .btn-primary {
   background-color: var(--primary);
   border-color: var(--primary);
@@ -127,7 +118,6 @@ label {
   box-shadow: 0 0 0 0.2rem rgba(0, 104, 95, 0.25);
 }
 
-/* Cards */
 .card {
   border: 1px solid #e0e6f0;
   border-radius: var(--radius-lg);
@@ -139,7 +129,6 @@ label {
   transition: all 0.3s ease;
 }
 
-/* Utilities */
 .text-primary {
   color: var(--primary) !important;
 }
@@ -160,7 +149,6 @@ label {
   background-color: var(--surface);
 }
 
-/* Spin Animation */
 @keyframes spin {
   from {
     transform: rotate(0deg);

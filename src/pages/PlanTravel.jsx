@@ -42,13 +42,11 @@ function PlanTravel() {
   const handleFromSearch = (value) => {
     setFromQuery(value);
     
-    // Clear previous timeout
     if (fromTimeoutRef.current) {
       clearTimeout(fromTimeoutRef.current);
     }
 
     if (value.trim().length > 0) {
-      // Debounce: wait 1000ms before searching
       fromTimeoutRef.current = setTimeout(async () => {
         setFromSearching(true);
         const results = await searchStops(value);
@@ -66,13 +64,11 @@ function PlanTravel() {
   const handleToSearch = (value) => {
     setToQuery(value);
     
-    // Clear previous timeout
     if (toTimeoutRef.current) {
       clearTimeout(toTimeoutRef.current);
     }
 
     if (value.trim().length > 0) {
-      // Debounce: wait 1000ms before searching
       toTimeoutRef.current = setTimeout(async () => {
         setToSearching(true);
         const results = await searchStops(value);
@@ -185,7 +181,6 @@ function PlanTravel() {
     };
   }, []);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (fromTimeoutRef.current) clearTimeout(fromTimeoutRef.current);
