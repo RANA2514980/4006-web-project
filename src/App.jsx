@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { TravelProvider } from './store/travelStore';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import LiveData from './pages/LiveData';
@@ -8,8 +9,9 @@ import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
-    <Router>
-      <div className="d-flex flex-column min-vh-100">
+    <TravelProvider>
+      <Router>
+        <div className="d-flex flex-column min-vh-100">
         <Navbar />
         <div className="flex-grow-1 overflow-auto">
           <Routes>
@@ -21,7 +23,8 @@ function App() {
           </Routes>
         </div>
       </div>
-    </Router>
+      </Router>
+    </TravelProvider>
   );
 }
 
