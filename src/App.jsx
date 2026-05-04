@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { TravelProvider } from './store/travelStore';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -10,8 +10,7 @@ import Dashboard from './pages/Dashboard';
 function App() {
   return (
     <TravelProvider>
-      <Router>
-        <div className="d-flex flex-column min-vh-100">
+      <div className="d-flex flex-column min-vh-100">
         <Navbar />
         <div className="flex-grow-1 overflow-auto">
           <Routes>
@@ -23,7 +22,6 @@ function App() {
           </Routes>
         </div>
       </div>
-      </Router>
     </TravelProvider>
   );
 }
