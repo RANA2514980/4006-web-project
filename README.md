@@ -1,16 +1,31 @@
-# React + Vite
+# 4006 Web Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Run Locally
 
-Currently, two official plugins are available:
+Follow these steps to set up and run the project on your machine:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Clone the repository
+git clone https://github.com/RANA2514980/4006-web-project.git
 
-## React Compiler
+### 2. Navigate to the project folder
+cd 4006-web-project
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 3. Install dependencies
+Make sure you have Node.js installed, then run:
+npm install
 
-## Expanding the ESLint configuration
+### 4. Start the development server
+npm start
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 5. Open in browser
+After the server starts, open your browser and go to:
+http://localhost:3000
+
+## Requirements
+- Node.js (v14 or higher recommended)
+- npm (comes with Node.js)
+
+## Troubleshooting
+If anything fails, try deleting node_modules and package-lock.json, then reinstall:
+rm -rf node_modules package-lock.json
+npm install
